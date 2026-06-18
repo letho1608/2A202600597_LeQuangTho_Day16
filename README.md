@@ -15,15 +15,26 @@ Repo sử dụng **Mock Runtime** (`mock_runtime.py`) để giả lập phản h
 
 Kết quả mock hoàn toàn deterministic — giúp bạn hiểu flow trước khi tốn chi phí API.
 
-### Chạy thử với mock
+### Chạy thử nghiệm
+Dự án đã được mở rộng để hỗ trợ đa nền tảng LLM thật (Gemini, OpenAI, Anthropic, Groq, Ollama) bên cạnh Mock runtime.
+
 ```bash
 # Cài đặt môi trường
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Chạy benchmark với mock data
+# Chạy benchmark với mock data (để test logic)
 python run_benchmark.py --dataset data/hotpot_mini.json --out-dir outputs/sample_run
+
+# Chạy với LLM thật (Ví dụ: Gemini - cần GEMINI_API_KEY trong .env)
+python run_benchmark.py --dataset data/hotpot_processed.json --out-dir outputs/real_run --use-llm --provider gemini
+
+# Chạy với OpenAI (cần OPENAI_API_KEY)
+python run_benchmark.py --use-llm --provider openai --model gpt-4o-mini
+
+# Chạy với Local Model qua Ollama
+python run_benchmark.py --use-llm --provider ollama
 
 # Chạy chấm điểm tự động
 python autograde.py --report-path outputs/sample_run/report.json

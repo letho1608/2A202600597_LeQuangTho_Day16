@@ -5,15 +5,22 @@ from pathlib import Path
 from typing import Iterable
 from .schemas import QAExample, RunRecord
 
+
 def normalize_answer(text: str) -> str:
     text = text.strip().lower()
+    # Remove articles
+    text = re.sub(r"\b(a|an|the)\b", " ", text)
+    # Remove punctuation
     text = re.sub(r"[^a-z0-9\s]", "", text)
-    text = re.sub(r"\s+", " ", text)
+    # Clean whitespace
+    text = re.sub(r"\s+", " ", text).strip()
     return text
+
 
 def load_dataset(path: str | Path) -> list[QAExample]:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     return [QAExample.model_validate(item) for item in raw]
+
 
 def save_jsonl(path: str | Path, records: Iterable[RunRecord]) -> None:
     path = Path(path)

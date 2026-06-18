@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import typer
 from rich import print
+import concurrent.futures
 from src.reflexion_lab.agents import ReActAgent, ReflexionAgent
 from src.reflexion_lab.reporting import build_report, save_report
 from src.reflexion_lab.utils import load_dataset, save_jsonl
@@ -31,17 +32,23 @@ def main(
     react = ReActAgent(use_llm=use_llm)
     reflexion = ReflexionAgent(max_attempts=reflexion_attempts, use_llm=use_llm)
 
-    print(f"Starting benchmark (use_llm={use_llm})...")
+    print(f"Starting benchmark (use_llm={use_llm}) with parallel execution...")
+
+    def run_react(example):
+        print(f"Running ReAct for {example.qid}...")
+        return react.run(example)
+        
+    def run_reflexion(example):
+        print(f"Running Reflexion for {example.qid}...")
+        return reflexion.run(example)
 
     react_records = []
-    for example in examples:
-        print(f"Running ReAct for {example.qid}...")
-        react_records.append(react.run(example))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        react_records = list(executor.map(run_react, examples))
 
     reflexion_records = []
-    for example in examples:
-        print(f"Running Reflexion for {example.qid}...")
-        reflexion_records.append(reflexion.run(example))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        reflexion_records = list(executor.map(run_reflexion, examples))
 
     all_records = react_records + reflexion_records
     out_path = Path(out_dir)

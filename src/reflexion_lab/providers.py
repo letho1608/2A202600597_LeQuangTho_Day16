@@ -126,7 +126,7 @@ class OllamaProvider(LLMProvider):
         start = time.time()
         options = {"format": "json"} if json_mode else {}
         
-        max_retries = 3
+        max_retries = 5
         for attempt in range(max_retries):
             try:
                 response = ollama.chat(
@@ -140,8 +140,9 @@ class OllamaProvider(LLMProvider):
                 break
             except Exception as e:
                 if attempt < max_retries - 1:
-                    print(f"Ollama error: {e}. Retrying in {2**attempt}s...")
-                    time.sleep(2**attempt)
+                    wait_time = 2**attempt if "429" not in str(e) else 5 * (attempt + 1)
+                    print(f"Ollama error: {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
                 else:
                     raise e
                     
